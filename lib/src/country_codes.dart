@@ -20,20 +20,13 @@ class CountryCodes {
     return locale!.countryCode;
   }
 
-  /// Inits the underlying plugin channel and fetch current's device locale to be ready
-  /// to use synchronously when required.
-  ///
-  /// If you never plan to provide a `locale` directly, you must call and await this
-  /// by calling `await CountryCodes.init();` before accessing any other method.
-  ///
-  /// Optionally, you may want to provide your [appLocale] to access localized
-  /// country name (eg. if your app is in English, display Italy instead of Italia).
-  ///
-  /// Example:
-  /// ```dart
-  /// CountryCodes.init(Localizations.localeOf(context))
-  /// ```
-  /// This will default to device's language if none is provided.
+  // Helper method to get flag emoji from country code
+  static String getEmojiFlag(String countryCode) {
+    final int firstLetter = countryCode.toUpperCase().codeUnitAt(0) - 0x41 + 0x1F1E6;
+    final int secondLetter = countryCode.toUpperCase().codeUnitAt(1) - 0x41 + 0x1F1E6;
+    return String.fromCharCode(firstLetter) + String.fromCharCode(secondLetter);
+  }
+
   static Future<bool> init([Locale? appLocale]) async {
     final List<dynamic>? locale = List<dynamic>.from(
         await (_channel.invokeMethod('getLocale', appLocale?.toLanguageTag())));
@@ -50,78 +43,63 @@ class CountryCodes {
     return _deviceLocale != null;
   }
 
-  /// Returns the current device's `Locale`
-  /// Eg. `Locale('en','US')`
   static Locale? getDeviceLocale() {
     assert(_deviceLocale != null,
         'Please, make sure you call await init() before calling getDeviceLocale()');
     return _deviceLocale;
   }
 
-  /// A list of dial codes for every country
   static List<String?> dialNumbers() {
     return codes.values
         .map((each) => CountryDetails.fromMap(each).dialCode)
         .toList();
   }
 
-  /// A list of country data for every country
   static List<CountryDetails> countryCodes() {
     return codes.entries
-        .map((entry) => CountryDetails.fromMap(
-            entry.value, _localizedCountryNames[entry.key]))
+        .map((entry) {
+          var data = Map<String, dynamic>.from(entry.value);
+          data['emoji'] = getEmojiFlag(entry.key);
+          return CountryDetails.fromMap(data, _localizedCountryNames[entry.key]);
+        })
         .toList();
   }
 
-  /// Returns the `CountryDetails` for the given [locale]. If not provided,
-  /// the device's locale will be used instead.
-  /// Have in mind that this is different than specifying `supportedLocale`s
-  /// on your app.
-  /// Exposed properties are the `name`, `alpha2Code`, `alpha3Code` and `dialCode`
-  ///
-  /// Example:
-  /// ```dart
-  /// "name": "United States",
-  /// "alpha2Code": "US",
-  /// "dial_code": "+1",
-  /// ```
   static CountryDetails detailsForLocale([Locale? locale]) {
     String? code = _resolveLocale(locale);
-    return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code]);
+    var data = Map<String, dynamic>.from(codes[code!]);
+    data['emoji'] = getEmojiFlag(code);
+    return CountryDetails.fromMap(data, _localizedCountryNames[code]);
   }
 
-  /// Returns the `CountryDetails` for the given country alpha2 code.
   static CountryDetails detailsFromAlpha2(String alpha2) {
-    return CountryDetails.fromMap(
+    var data = Map<String, dynamic>.from(
         codes.entries.where((entry) => entry.key == alpha2).single.value);
+    data['emoji'] = getEmojiFlag(alpha2);
+    return CountryDetails.fromMap(data);
   }
 
-  /// Returns the ISO 3166-1 `alpha2Code` for the given [locale].
-  /// If not provided, device's locale will be used instead.
-  /// You can read more about ISO 3166-1 codes [here](https://en.wikipedia.org/wiki/ISO_3166-1)
-  ///
-  /// Example: (`US`, `PT`, etc.)
   static String? alpha2Code([Locale? locale]) {
     String? code = _resolveLocale(locale);
     return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code])
         .alpha2Code;
   }
 
-  /// Returns the `dialCode` for the given [locale] or device's locale, if not provided.
-  ///
-  /// Example: (`+1`, `+351`, etc.)
   static String? dialCode([Locale? locale]) {
     String? code = _resolveLocale(locale);
     return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code])
         .dialCode;
   }
 
-  /// Returns the exended `name` for the given [locale] or if not provided, device's locale.
-  ///
-  /// Example: (`United States`, `Portugal`, etc.)
   static String? name({Locale? locale}) {
     String? code = _resolveLocale(locale);
     return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code])
         .name;
+  }
+
+  // New method to get emoji flag
+  static String? emoji([Locale? locale]) {
+    String? code = _resolveLocale(locale);
+    return getEmojiFlag(code!);
   }
 }
