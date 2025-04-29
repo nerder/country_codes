@@ -97,6 +97,13 @@ const Map<String, dynamic> codes = {
     "dial_code": "+43",
     "country_code": "de_AT"
   },
+  "AX": {
+    "name": "Åland Islands",
+    "alpha2Code": "AX",
+    "alpha3Code": "ALA",
+    "dial_code": "+358",
+    "country_code": "sv_AX"
+  },
   "AZ": {
     "name": "Azerbaijan",
     "alpha2Code": "AZ",
