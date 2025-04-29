@@ -35,9 +35,8 @@ class CountryCodes {
   /// ```
   /// This will default to device's language if none is provided.
   static Future<bool> init([Locale? appLocale]) async {
-    final List<dynamic>? locale = List<dynamic>.from(
-        await (_channel.invokeMethod('getLocale', appLocale?.toLanguageTag())));
-    if (locale != null) {
+    final List<dynamic>? locale = List<dynamic>.from(await (_channel.invokeMethod('getLocale', appLocale?.toLanguageTag())));
+    if (locale != null && locale.length >= 2) {
       String countryCode = locale[1];
 
       if (!codes.containsKey(countryCode)) {
@@ -53,24 +52,18 @@ class CountryCodes {
   /// Returns the current device's `Locale`
   /// Eg. `Locale('en','US')`
   static Locale? getDeviceLocale() {
-    assert(_deviceLocale != null,
-        'Please, make sure you call await init() before calling getDeviceLocale()');
+    assert(_deviceLocale != null, 'Please, make sure you call await init() before calling getDeviceLocale()');
     return _deviceLocale;
   }
 
   /// A list of dial codes for every country
   static List<String?> dialNumbers() {
-    return codes.values
-        .map((each) => CountryDetails.fromMap(each).dialCode)
-        .toList();
+    return codes.values.map((each) => CountryDetails.fromMap(each).dialCode).toList();
   }
 
   /// A list of country data for every country
   static List<CountryDetails> countryCodes() {
-    return codes.entries
-        .map((entry) => CountryDetails.fromMap(
-            entry.value, _localizedCountryNames[entry.key]))
-        .toList();
+    return codes.entries.map((entry) => CountryDetails.fromMap(entry.value, _localizedCountryNames[entry.key])).toList();
   }
 
   /// Returns the `CountryDetails` for the given [locale]. If not provided,
@@ -92,8 +85,7 @@ class CountryCodes {
 
   /// Returns the `CountryDetails` for the given country alpha2 code.
   static CountryDetails detailsFromAlpha2(String alpha2) {
-    return CountryDetails.fromMap(
-        codes.entries.where((entry) => entry.key == alpha2).single.value);
+    return CountryDetails.fromMap(codes.entries.where((entry) => entry.key == alpha2).single.value);
   }
 
   /// Returns the ISO 3166-1 `alpha2Code` for the given [locale].
@@ -102,26 +94,56 @@ class CountryCodes {
   ///
   /// Example: (`US`, `PT`, etc.)
   static String? alpha2Code([Locale? locale]) {
-    String? code = _resolveLocale(locale);
-    return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code])
-        .alpha2Code;
+    try {
+      String? code = _resolveLocale(locale);
+
+      if (code == null) {
+        return null;
+      }
+
+      return CountryDetails.fromMap(codes[code], _localizedCountryNames[code]).alpha2Code;
+    } catch (ex) {
+      debugPrint('Failed to get alpha2 code for locale: $locale');
+      return null;
+    }
   }
 
   /// Returns the `dialCode` for the given [locale] or device's locale, if not provided.
   ///
   /// Example: (`+1`, `+351`, etc.)
   static String? dialCode([Locale? locale]) {
-    String? code = _resolveLocale(locale);
-    return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code])
-        .dialCode;
+    try {
+      String? code = _resolveLocale(locale);
+
+      if (code == null) {
+        return null;
+      }
+
+      return CountryDetails.fromMap(codes[code], _localizedCountryNames[code]).dialCode;
+    } catch (ex) {
+      debugPrint('Failed to get dial code for locale: $locale');
+      return null;
+    }
   }
 
   /// Returns the exended `name` for the given [locale] or if not provided, device's locale.
   ///
   /// Example: (`United States`, `Portugal`, etc.)
-  static String? name({Locale? locale}) {
-    String? code = _resolveLocale(locale);
-    return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code])
-        .name;
+  static String? name({Locale? locale, VoidCallback? onInvalidLocale}) {
+    try {
+      String? code = _resolveLocale(locale);
+
+      if (code == null) {
+        return null;
+      }
+
+      return CountryDetails.fromMap(codes[code], _localizedCountryNames[code]).name;
+    } catch (ex) {
+      if (onInvalidLocale != null) {
+        onInvalidLocale();
+      }
+      debugPrint('Failed to get name for locale: $locale');
+      return null;
+    }
   }
 }

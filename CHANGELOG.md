@@ -1,3 +1,22 @@
+## [3.3.0] - 02/13/2025
+* Removed old pre-Flutter-1.12 Android project plugin method `registerWith` which has been removed from flutter 3.29.0
+
+## [3.2.3+1] - 06/02/2025
+* Add onInvalidLocale callback to `name` method.
+
+## [3.2.2+3] - 31/01/2025
+* Fix minor regression where `init` would fail if the device's locale was null.
+
+## [3.2.2] - 31/01/2025
+* Handles an issue where the country code could not be resolved and an exception was thrown.
+
+## [3.2.1] - 29/01/2025
+* Address an issue where init could use an empty list.
+
+## [3.2.0] - 14/05/2024
+* Adds sub regions.
+* Addresses an issue when the code could not be resolved and an exception was thrown.
+
 ## [3.1.0] - 14/05/2024
 * Adds `countryCode` property.
 
