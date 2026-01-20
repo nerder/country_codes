@@ -78,9 +78,19 @@ class CountryCodes {
   /// "alpha2Code": "US",
   /// "dial_code": "+1",
   /// ```
-  static CountryDetails detailsForLocale([Locale? locale]) {
-    String? code = _resolveLocale(locale);
-    return CountryDetails.fromMap(codes[code!], _localizedCountryNames[code]);
+  static CountryDetails? detailsForLocale([Locale? locale]) {
+    try {
+      String? code = _resolveLocale(locale);
+
+      if (code == null) {
+        return null;
+      }
+
+      return CountryDetails.fromMap(codes[code], _localizedCountryNames[code]);
+    } catch (ex) {
+      debugPrint('Failed to get details for locale: $locale');
+      return null;
+    }
   }
 
   /// Returns the `CountryDetails` for the given country alpha2 code.
